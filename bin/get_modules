@@ -1,0 +1,102 @@
+#!/usr/bin/env ruby
+#
+# put this in your ocp repo's parent directory and let it
+# create an HTML or CSV report of all courses, all modules, and all topics
+
+require 'optionparser'
+require 'find'
+require 'asciidoctor'
+require 'pathname'
+
+options = {}
+options[:output] = "html"
+options[:prefix] = "ocp"
+
+OptionParser.new do |opts|
+  opts.banner = "Usage: get_modules [options] [path]\nDefaults: get_modules --output=csv --courseprefix=ocp ." + File::SEPARATOR
+  opts.on("-o", "--output csv|html", "Emit a CSV or HTML") do |output|
+    options[:output] = output
+  end
+  opts.on("-p", "--courseprefix", "Path glob to find courses") do |courseprefix|
+    options[:prefix] = courseprefix
+  end
+end.parse!
+
+options[:path] = ARGV.select {|i| File.directory? i }[0] || '.'
+
+DEBUG = false
+
+# all _Slides.adoc files for courses that start with ocp_*
+def slide_files(options)
+  paths = Array.new
+  Dir.glob(options[:path]).each do |course|
+    Find.find(course).find_all {|f| f.include?(options[:prefix]) &&
+                                    f.include?('/modules/') &&
+                                    f.include?('_Slides.adoc')}.sort.map do |path|
+      Find.find(path).reject { |file| file.include?('01_Course_Intro') }.map do |good_path|
+        paths << good_path
+      end
+    end
+  end
+  return paths
+end
+
+# all "Module Topics" for each slide file
+last_course_name = String.new
+topics = Array.new
+
+slide_files(options).sort.each do |slides|
+  doc = Asciidoctor.load_file slides, safe: :safe, parse: :false
+
+  # coure name
+  course_name = Pathname(slides).each_filename.detect { |f| f.start_with?(options[:prefix]) }.split('_').map(&:capitalize).join(' ')
+
+  # module name
+  module_topics = "section missing"
+  m = Pathname(slides).each_filename.to_a
+  module_name = m.fetch(m.index("modules") + 1).gsub(/_/, ' ')
+
+  # topic name
+  doc.find_by(context: :section).each do |sect|
+    if sect.id == "_module_topics"
+      module_topics = sect.content
+      sect.find_by(context: :ulist).each do |list|
+        list.items.each do |item|
+          topics << %("#{item.text}", "#{module_name}", "#{course_name}")
+        end
+      end
+    end
+  end
+
+  # html out
+  if options[:output] == "html"
+    if last_course_name != course_name
+      puts "<h2>" + course_name + "</h2>"
+      last_course_name = course_name
+    end
+
+    puts "<h3>Module: " + module_name + "</h3>"
+    puts "<pre>filename: "+slides+"</pre>"
+    puts module_topics
+  end
+end
+
+if options[:output] == "csv"
+  puts topics
+end
+
+#  doc.find_by( context: :section ).each do |sect|
+#    if sect.title == "Module Topics"
+#      puts sect.source
+#    end
+#  end
+
+#  puts "by section"
+#  puts doc.find_by( context: :section )
+#
+#  puts "by grade"
+#  puts doc.find_by( id: :grade )
+#
+#  puts "by role"
+#  puts doc.find_by( role: 'grade' )
+#  puts doc.find_by

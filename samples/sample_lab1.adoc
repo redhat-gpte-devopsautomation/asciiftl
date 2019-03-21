@@ -1,0 +1,349 @@
+:scrollbar:
+:data-uri:
+:toc2:
+:linkattrs:
+
+== Demonstrate Exploring OpenShift Resources Lab
+
+.Scenario
+
+In the scenario for this demonstration lab, a developer wants to deploy the
+ `cakephp-mysql-example` application from a Git repository and review the different
+ OpenShift resources created for it.
+
+:numbered:
+
+== Demonstrate Authentication to OpenShift Master
+
+. *Action*: Log in to the OPENTLC shared OpenShift web console using either
+ of these methods:
+* Method 1: Go to link:https://master.na39.openshift.opentlc.com[https://master.na39.openshift.opentlc.com^]
+* Method 2: Use the command line from any host with the OpenShift client
+ utility (`oc`) installed:
++
+[source,bash]
+----
+LocalMachine$ oc login https://master.na39.openshift.opentlc.com --username username-domain.com
+Username: username-domain.com
+Password: **********
+Logged into "https://master.na39.openshift.opentlc.com" as "username-domain.com" using existing credentials.
+----
+
+
+== Demonstrate Creating a Project
+
+. *Action*: Click *Create Project* to create a project for your demonstration.
++
+////
+image::images/Demo01_New_Project_Button.png[]
+////
+- *Explain* what projects are and how different projects can have different user
+ permissions and quotas attached to them.
+
+. *Action*: Fill in the *Name*, *Display Name*, and *Description* fields as follows:
+* *Name*: `GUID-exploring-openshift`
++
+[IMPORTANT]
+Make sure you replace `GUID` with a unique identifier, such as your client's name or the four-character identifier you've received from OPENTLC (we use `tok` in the example below). Project names must be unique in OpenShift.
+* *Display Name*: `Exploring OpenShift UI`
+* *Description*: `This is the project for exploring OpenShift UI`
++
+////
+image::images/Explore_Demo02_Create_Project_Details.png[]
+////
++
+[TIP]
+====
+Two other options for completing this task:
+
+* Use the command line from any host with the OpenShift client utility (`oc`) installed. Don't forget to replace `tok` in the example below with the actual GUID you've received from OPENTLC:
++
+[source,bash]
+----
+[username-domain.com@bastion ~]$ export GUID=tok
+[username-domain.com@bastion ~]$ oc new-project ${GUID}-exploring-openshift --description="This is the Project for exploring OpenShift UI" --display-name="Exploring OpenShift UI"
+Now using project "tok-exploring-openshift" on server "https://master.na39.openshift.opentlc.com".
+----
+* Run the `oc new-project ${GUID}-exploring-openshift` command without the description
+ and display name information.
+====
+
+[grade]
+////
+Some code to grade lab here.
+////
+
+== Demonstrate Deploying an Application Based on a Template
+
+. *Action*: After creating your project or after clicking *Browse Catalog*, click *Browse Catalog* and select *CakePHP + MySQL (Ephemeral)*:
++
+
+image::images/Explore_Demo03_Select_Template.png[]
+
+* *Explain* the following aspects of the *Application Creation* page:
+** Point out the *Name* for this deployment.
+** Point out the *Memory limits* for your PHP application and for the MySQL database
+ container.
+** Point out that the *Git Repository URL* field allows you to define the
+ Git repository that contains the source code for your application.
++
+////
+image::images/Explore_Demo04_App_Template_Options1.png[]
+////
+* *Explain* that there are more settings that you can define as you scroll down the page:
+** Point out that you can set different variables in your deployment, such as
+ the database user, passwords, and more, and that these settings are used to deploy
+  the front-end application and the back-end database.
+** Point out that you can use *Labels* to add information to deployment objects
+ and resources that you can then use to group, inspect, scale, or delete them.
++
+////
+image::images/Explore_Demo05_App_Template_Options2.png[]
+////
+. *Action*: When you are done, click *Create*.
+
+. *Action*: Click the *Continue to the project overview* link.
+////
+image::images/Explore_Demo05_App_Template_Options2.png[]
+////
+== Demonstrate Deployment Overview Page & Grouping
+
+. *Action*: While your application is being built and deployed, review the
+ *Overview* page.
+* *Explain* the following aspects:
+** Point out that the *Route* has been created for the application and once it
+ is deployed, you can open the link in a another tab to access the application.
+** Point out the *Build* status and that you can click the link to go to the build
+ page.
++
+////
+image::images/Explore_Demo08_Overview_Grouping1.png[]
+////
+. *Action*: From the menu on the left, select *Applications -> Services*:
++
+image::images/Explore_Demo09_Overview_Grouping2.png[]
+* *Explain* that *Services* were created for your front-end pods and your database back end.
+
+. *Action*: In the list of *Services*, click *mysql*:
++
+image::images/Explore_Demo10_Overview_Grouping3.png[]
+
+* *Explain* that this displays the *Route* and *Pods*:
++
+image::images/Explore_Demo10a_Overview_Grouping4.png[]
+
+////
+* *Explain* the following:
+** In addition to seeing the route and the status of the deployment, once the build
+ is complete, the number of replicas can be easily increased or decreased from this
+ panel (or via an API).
+** Point out that you can see the current aggregated resource consumption for a
+ group of pod replicas.
++
+image::images/Explore_Demo10b_Overview_Grouping5.png[]
+////
+
+== Demonstrate Exploring Build Pages
+
+In this section, you look at the information available in the UI about your builds.
+
+. *Action*: From the menu on the left, select *Builds -> Builds*:
++
+////
+image::images/Explore_Demo11_Builds01.png[]
+////
+* *Explain* that the _project's_ *Builds* page displays all the builds for the project.
+** Point out that you can see the status and completion time for each build in the
+ project.
+** Point out that you can easily navigate to the source code repository where the
+ build source is stored.
+. *Action*: Select one of the builds in the list:
++
+image::images/Explore_Demo11_Builds02.png[]
+
+* *Explain* that in the _application's_ *Builds* page you can see the following:
+** Point out that you can start a new build by clicking *Start Build* on the top right.
+** Point out that you can view the configuration used for this build in the
+ *Configuration* tab.
+. *Action*: Click build `#1`:
++
+////
+image::images/Explore_Demo11_Builds03.png[]
+////
+* *Explain* that in the _individual_ *Builds* page you can see details about a
+ specific build.
+** Mention that you can click *Rebuild* to trigger a new build.
+** Point out that you can see the status of the build and the reason it was triggered.
+** Point out that you can see the configuration for the build, including the base image
+ that was used and the name of the output image.
++
+image::images/Explore_Demo11_Builds04.png[]
+
+. *Action*: When you are done, select the *Logs* tab.
+* *Explain* that the *Logs* tab displays the logs for the build, which in this
+ example are minimal.
+* *Explain* that in other examples you may see code dependencies pulled down for
+ the container and other configuration logs.
+** Point out that in this example the source code repository is cloned/downloaded
+ to your container.
+** Point out that you can see that the completed image is automatically pushed
+ into the integrated registry under your project name.
++
+image::images/Explore_Demo11_Builds05.png[]
+
+
+
+
+== Demonstrate Exploring Deployment Pages
+
+. *Action*: From the menu on the left, select *Applications -> Deployments*:
++
+////
+image::images/Explore_Demo12_Deployments01.png[]
+////
+* *Explain* that the project's *Deployments* page displays all of the deployments
+ for the project.
+** Point out that you can see the last deployment numbers and click each one
+ to drill down (*#1* in this example).
+** Point out that you can see the *Status* and *Replica Count* for each deployment.
+** Point out that you can see the *Trigger* that started the last deployment.
++
+
+image::images/Explore_Demo12_Deployments02.png[]
+. *Action*: When you are done, click the application's deployment link in the list
+ of deployments.
+* *Explain* the following features of an individual application's *Deployment* page:
+** Point out that you can start a new deployment by clicking *Deploy*.
+** Point out that you can select the individual deployments.
++
+image::images/Explore_Demo12_Deployments02a.png[]
+
+. *Action*: When you are done, click the deployment link in the list of deployments.
+* *Explain* the following features:
+** Point out that you can view the configuration used for this deployment,
+ including the template, source, open ports, memory limit, and more.
+** You can also see *Readiness* and *Liveness* probes that were set.
+** Mention that you can add, remove, or change probes using the *Actions* list in the top right.
+** Point out that you can add persistent volumes for this application if required.
+** You can also add an autoscaler pod for the deployment.
++
+image::images/Explore_Demo12_Deployments03.png[]
+
+. *Action*: When you are done, select the *Environment* tab.
+* *Explain* that the *Environment* tab displays the environment variables set
+ for your deployment.
+** Point out that the environment variables are used to set different parameters
+ within your containers and pods such as user names, database service name, and more.
+** Point out that you can add your own environment variables and address them
+from your application's code.
++
+image::images/Explore_Demo12_Deployments04.png[]
+
+. *Action*: When you are done, select the *Events* tab.
+* *Explain* that in the *Events* tab you can see different events related to your
+ deployment.
+** Point out that the events list offers a useful way to see if something went wrong
+ in a deployment or to track back a chain of events.
++
+image::images/Explore_Demo12_Deployments05.png[]
+
+
+== Demonstrate Exploring Pods Pages
+
+. *Action*: From the menu on the left, select *Applications -> Pods*:
++
+image::images/Explore_Demo13_Pods01.png[]
+
+* *Explain* that the project's *Pods* page displays all of the pods that are currently
+ running in the project.
+** Point out that you can see the container status: Running, Pending, etc.
+** Point out that the *Containers Ready* column shows the true status of the
+ application in the container based on readiness checks.
++
+image::images/Explore_Demo13_Pods02.png[]
+
+. *Action*: When you are done, select your application's *Pod* from the list.
+
+* *Explain* that the individual *Pod* page displays the following:
+** Point out the pod's status and the OpenShift node hosting it.
+** Point out the information displayed in the *Template* section, including image, build, source, ports,
+ mount points, CPU, and memory usage ranges.
+** Point out that you can inspect and change readiness and liveness probes from
+ this page.
+** Point out that you can view volumes and secrets used by the pod here as well.
++
+image::images/Explore_Demo13_Pods03.png[]
+
+. *Action*: When you are done, select the *Metrics* tab.
+* *Explain* that the *Metrics* tab displays the resources used by your pod:
+** Point out available memory (based on the pod's memory limits) and used memory.
+** Point out available CPU (based on the pod's CPU limits) and used CPU.
+** Point out that if you scroll down, you can also see the network stats for the pod.
++
+image::images/Explore_Demo13_Pods04.png[]
+
+. *Action*: When you are done, select the *Logs* tab.
+* *Explain* that the *Logs* tab displays the log for the pod:
+** Point out the pod's messages that are displayed here and note that you can follow
+ the log as it updates.
+** Mention that if you click *View archive*, you are seamlessly connected to the
+ Kibana aggregated logging facility where you can view logs for all pods--past
+ and present--running in your project. (This is discussed in later demonstrations).
++
+image::images/Explore_Demo13_Pods05.png[]
+
+. *Action*: When you are done, select the *Terminal* tab.
+* *Explain* that the *Terminal* tab allows you to use a terminal inside any of the
+ containers in the pod.
+** Point out that you can run commands within the container for debugging and
+ testing.
++
+image::images/Explore_Demo13_Pods06.png[]
+
+. *Action*: When you are done, select the *Events* tab.
+
+* *Explain* that the *Events* tab displays events related to the pod.
+** Point out that you can use this list to see if something went wrong in the
+ pod deployment or to track back a chain of events.
++
+image::images/Explore_Demo13_Pods07.png[]
+
+
+
+== Demonstrate Exploring Services & Routes Pages
+
+. *Action*: From the menu on the left, select *Applications -> Services*:
++
+image::images/Explore_Demo14_Services_and_Routes01.png[]
+
+* *Explain* that the project's *Services* page displays all of the services
+ that currently exist in the project:
+** Point out that *Cluster IP* is the permanent IP address that the service uses
+ to represent its pods.
+** Point out the *Ports* that the service is listening on.
+** Point out that the *Selector* describes the labels that the pods must have to be
+ regarded as part of the service.
++
+image::images/Explore_Demo14_Services_and_Routes02.png[]
+
+. *Action*: When you are done, select your application's pod from the list.
+. *Action*: From the menu on the left, select *Applications -> Routes*:
++
+image::images/Explore_Demo14_Services_and_Routes03.png[]
+
+* *Explain* that the project's *Routes* page displays all of the routes that
+ currently exist in the project.
+** Point out the list of routes and the services they represent.
++
+image::images/Explore_Demo14_Services_and_Routes04.png[]
+
+== Clean Up Environment
+
+If you are not going to do any additional demonstrations, go back to the home page in the OpenShift web console and delete your project.
+
+== Additional Demonstrations
+
+You can do the following optional demonstrations:
+
+* Show adding storage to a container.
+* Show metrics and logging for a container.

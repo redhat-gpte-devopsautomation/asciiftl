@@ -1,0 +1,21 @@
+#!/usr/bin/env ruby
+
+require 'asciidoctor'
+
+doc = Asciidoctor.load_file 'sample_lab1.adoc', safe: :safe
+
+#doc.find_by(context: :block) {|candidate| candidate.title.include? 'grade' }.each do |gblock|
+#doc.find_by(context: :grade) {|candidate|}.each do |gblock|
+  #puts gblock
+#end
+puts "by section"
+puts doc.find_by( context: :section ) 
+
+puts "by grade"
+puts doc.find_by( id: :grade ) 
+
+
+puts "by role"
+puts doc.find_by( role: 'grade' ) 
+puts doc.find_by
+
