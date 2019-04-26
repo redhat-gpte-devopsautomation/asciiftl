@@ -1,10 +1,11 @@
 #!/usr/bin/env ruby
 #
-# put this in your ocp repo's parent directory and let it
-# create an HTML or CSV report of all courses, all modules, and all topics, slide count
+
+# output numbered slide IDs AND asciidoc slide IDs.
+#
+
 
 require 'optionparser'
-require 'find'
 require 'asciidoctor'
 require 'pathname'
 
@@ -24,8 +25,9 @@ end.parse!
 
 options[:path] = ARGV.select {|i| File.directory? i }[0] || '.'
 
-DEBUG = false
+doc = Asciidoctor.load_file options[:path], safe: :safe, parse: :false
 
+__END__
 # all _Slides.adoc files for courses that start with ocp_*
 def slide_files(options)
   paths = Array.new
@@ -48,7 +50,7 @@ topics = Array.new
 slide_files(options).sort.each do |slides|
   doc = Asciidoctor.load_file slides, safe: :safe, parse: :false
 
-  # coure name from pathname
+  # coure name
   course_name = Pathname(slides).each_filename.detect { |f| f.start_with?(options[:prefix]) }.split('_').map(&:capitalize).join(' ')
 
   # module name
@@ -56,7 +58,7 @@ slide_files(options).sort.each do |slides|
   m = Pathname(slides).each_filename.to_a
   module_name = m.fetch(m.index("modules") + 1).gsub(/_/, ' ')
 
-  # topic names
+  # topic name
   doc.find_by(context: :section).each do |sect|
     if sect.id == "_module_topics"
       module_topics = sect.content
