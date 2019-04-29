@@ -1,41 +1,96 @@
 #!/usr/bin/env ruby
 #
-# ::Module for parsing GPTE instruction modules
-# Course::Module::Topic::Slide
-# Course::Module::Topic::Lab
-# Course::Module::Topic::Assessment
+# ::CModule for parsing GPTE instruction modules
+# Course::CModule::Topic::Slide
+# Course::CModule::Topic::Lab
+# Course::CModule::Topic::Assessment
 
 # Courses:
-#   Modules:
+#   CModules:
 #     Topics:
 #       Slides
 #     Labs:
 #       Topics
 
-# require 'open-uri'
+require 'git'
+require 'octokit'
 require 'asciidoctor'
 
+class GitHubOrg
+  def initialize(org='redhat-gpe',repo_base='/tmp/course_repos')
+    @org       = org
+    @client    = Octokit::Client.new(:login => ENV["git_username"], :password => ENV["git_password"])
+    @repo_base = repo_base
+    @repos     = Hash.new
+    @courses   = Array.new(0)
+    puts "org: #{org}: #{repo_base}"
+    ocp_courses
+    load_courses
+  end
+
+  # returns list of courses
+  def courses
+    courses = @client.org_repos('redhat-gpe', {:type => 'all', :sort => 'pushed'})
+    courses.each { |c| puts c.name }
+  end
+
+  def ocp_courses
+    c_repos = @client.org_repos('redhat-gpe', {:type => 'all', :sort => 'pushed'})
+    c_repos.each do |c|
+      if c.name.start_with?('ocp')
+        @repos[c.name] = c.html_url
+        puts c.name
+        puts @repos[c.name]
+      end
+    end
+    puts @repos
+  end
+
+  def clone_repo(repo_name)
+    puts "clone repo: #{repo_name})"
+    g = Git.clone(repo_name, :path => @repo_base + repo_name)
+    return @repo_base + '/' + name
+  end
+
+  def refresh_repo(repo_name)
+    repo_base_name = "#{@repo_base}/#{repo_name}"
+    #puts "refresh #{@repos[repo_name]} basename: #{repo_base_name}"
+    g = Git.clone(@repos[repo_name], repo_base_name)
+    # if g failed, then clone
+    return repo_base_name
+  end
+
+  def load_courses
+    @repos.each_key do |r_name|
+      puts "rname #{r_name}"
+      # refresh the repo
+      r_path = refresh_repo(r_name)
+      puts "repo path: #{r_path}"
+      # load the course
+      @courses << Course.new(r_name,r_path)
+    end
+  end
+end
 
 class Course
-  def initialize(name, uri)
+  def initialize(name, path)
     @name    = name
-    @uri     = uri
+    @path    = path
     @modules = Array.new
-    puts "new Course"
     load
   end
 
   def load
-    # read URL or path to get all Module names
+    # read URL or path to get all CModule names
     # load by URL
 
     # load by path
-    modules_path = @uri + "/modules/"
+    modules_path = @path + "/modules/"
     # it should have a modules directory
     if FileTest.directory?(modules_path)
       # /*/ == find depth 1
       # load all modules
-      Dir[modules_path+"/*/"].each { |p| @modules << Module.new("",p) }
+      Dir[modules_path+"/*/"].each { |p| @modules << CModule.new("",p) }
       @course_title = @modules[0].course_title
     else
       raise "no dir #{modules_path}"
@@ -51,10 +106,10 @@ class Course
   end
 end
 
-class Module
-  def initialize(name, uri)
+class CModule
+  def initialize(name, path)
     @name = name
-    @uri  = uri
+    @path  = path
     @labs = Array.new
     @slides = Array.new
     @topics = Hash.new(0)
@@ -98,7 +153,7 @@ class Module
     # just files for now
     # slides
     # use find to get the _Slides and *_Lab.adoc paths of module
-    slides_path = @uri + "/_Slides.adoc"
+    slides_path = @path + "/_Slides.adoc"
     if FileTest.readable?(slides_path)
       @slides_asciidoc = Asciidoctor.load_file slides_path, safe: :safe, parse: :false, :attributes => 'revealjs_slideshow'
     else
@@ -108,7 +163,7 @@ class Module
     #labs
     # for each lab name, use the solutions, else use the lab
     lab_paths = Hash.new("0")
-    path = @uri + "/[0-9][0-9]*_Lab.adoc"
+    path = @path + "/[0-9][0-9]*_Lab.adoc"
     Dir.glob(path).each do |l|
       # get names
       lab_name = File.basename(l)
@@ -233,14 +288,15 @@ end
 #  puts
 #end
 
-module1 = Module.new('intro', '/Users/jmaltin/newgoliath/ocp4_foundations/modules/03_OpenShift_User_Experience/')
-puts module1.topics
-puts "Module Labs: #{module1.labs.count}"
-puts "Module Labs Topics: "
-module1.labs.each { |l| puts l.topics }
+##module1 = Module.new('intro', '/Users/jmaltin/newgoliath/ocp4_foundations/modules/03_OpenShift_User_Experience/')
+#puts module1.topics
+#puts "Module Labs: #{module1.labs.count}"
+#puts "Module Labs Topics: "
+#module1.labs.each { |l| puts l.topics }
 #puts module1.course_title
 #puts module1.title
 #
 #lab1 = Lab.new('test', '/Users/jmaltin/newgoliath/ocp4_foundations/modules/03_OpenShift_User_Experience/03_01_Demonstrate_OpenShift_Resources_Lab.adoc')
 #puts lab1.topics
 
+github = GitHubOrg.new()
