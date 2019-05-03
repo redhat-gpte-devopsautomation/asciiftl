@@ -15,6 +15,7 @@
 require 'git'
 require 'octokit'
 require 'asciidoctor'
+require 'erb'
 
 class GitHubOrg
   def initialize(org='redhat-gpe',repo_base='/tmp/course_repos')
@@ -23,7 +24,7 @@ class GitHubOrg
     @repo_base = repo_base
     @repos     = Hash.new
     @courses   = Array.new(0)
-    puts "org: #{org}: #{repo_base}"
+    #puts "org: #{org}: #{repo_base}"
     ocp_courses
     load_courses
   end
@@ -72,12 +73,71 @@ class GitHubOrg
   end
 end
 
+class ReadMe
+
+  attr_reader :course
+
+  def initialize
+    # takes and adoc and parses into sections
+    @readme_overview = Array.new
+    @readme_modules = Array.new
+    @readme_skills = nil
+  end
+
+  def load(readme_asciidoc)
+    readme_asciidoc.find_by(context: :section).each do |sect|
+      puts sect.title
+      if sect.level == 1
+        if sect.title == 'Overview'
+          @readme_overview = sect
+        end
+        if sect.title == 'Modules Review'
+          @readme_modules = sect
+        end
+        if sect.title == 'Version'
+          @readme_version = sect
+        end
+      end
+    end
+  end
+
+  def render
+    @template = File.read('./README.adoc.erb')
+    puts ERB.new(@template).result( binding )
+  end
+
+  def construct(course)
+    @course = course
+    render
+  end
+
+end
+
 class Course
   def initialize(name, path)
     @name    = name
     @path    = path
     @modules = Array.new
     load
+    #load_readme
+  end
+
+  def load_readme
+    readme_path = @path + '/README.adoc'
+    if FileTest.readable?(readme_path)
+      @readme_asciidoc = Asciidoctor.load_file readme_path, safe: :safe, parse: :false
+    else
+      raise "cant read #{readme_path}"
+    end
+    @readme = ReadMe.new()
+    @readme.load(@readme_asciidoc)
+  end
+
+  def render_readme
+    # if there's already a readme object, render it
+    @readme = ReadMe.new()
+    # If there's not already a readme object, construct and then render
+    @readme.construct(self)
   end
 
   def load
@@ -90,7 +150,7 @@ class Course
     if FileTest.directory?(modules_path)
       # /*/ == find depth 1
       # load all modules
-      Dir[modules_path+"/*/"].each { |p| @modules << CModule.new("",p) }
+      Dir[modules_path+"/*/"].sort.each { |p| @modules << CModule.new("",p) }
       @course_title = @modules[0].course_title
     else
       raise "no dir #{modules_path}"
@@ -107,6 +167,9 @@ class Course
 end
 
 class CModule
+
+  attr_reader :topics, :labs, :course_title
+
   def initialize(name, path)
     @name = name
     @path  = path
@@ -124,8 +187,8 @@ class CModule
     return @course_title
   end
 
-  def topics
-    @topics
+  def topic_names
+    @topics.keys[1..]
   end
 
   def slides_by_topic
@@ -144,16 +207,13 @@ class CModule
     @slides.each
   end
 
-  def labs
-    @labs
-  end
-
   def load
     #puts "reads in all slides and labs by path or URL of the module/NN"
     # just files for now
     # slides
     # use find to get the _Slides and *_Lab.adoc paths of module
     slides_path = @path + "/_Slides.adoc"
+    # puts "slides_path #{slides_path}"
     if FileTest.readable?(slides_path)
       @slides_asciidoc = Asciidoctor.load_file slides_path, safe: :safe, parse: :false, :attributes => 'revealjs_slideshow'
     else
@@ -167,13 +227,11 @@ class CModule
     Dir.glob(path).each do |l|
       # get names
       lab_name = File.basename(l)
-      lab_name.delete_suffix! "_Solution_Lab.adoc" 
+      lab_name.delete_suffix! "_Solution_Lab.adoc"
       lab_name.delete_suffix! "_Lab.adoc"
       # Hash[lab_name: :lab_path]
       lab_paths[lab_name] = l unless lab_paths[lab_name].match?('_Solution_Lab.adoc')
     end
-
-    puts lab_paths
 
     # process labs asciidoc
     # lab sections are topics
@@ -250,20 +308,27 @@ class Slide
 end
 
 class Lab
-  def initialize(name,doc)
-    @name = name
+
+  attr_reader :scenario, :title, :topics
+
+  def initialize(title,doc)
+    @title = title
     @doc  = doc
+
+    # populate topics
     @topics = Array.new
-    @doc.find_by(context: :section) do |s|
-      puts s.title
-      @topics << s.title
+    doc.find_by( context: :section ) {|s| s.level == 1 }.each_with_index do |sect,i|
+      @topics << sect.title
+      if i == 0
+        # the 0th is the scenario
+        @scenario = sect.blocks[0].content
+      end
     end
   end
 
-  def topics
-    #puts @doc.find_by(context: :section)
-    @topics
-  end
+#   def topics
+#     @topics
+#   end
 
   def prep_blocks
     puts "prep_block"
@@ -278,7 +343,9 @@ class Lab
   end
 end
 
-#course1 = Course.new('ocp4_foundaitons','/Users/jmaltin/newgoliath/ocp4_foundations')
+course1 = Course.new('ocp4_foundaitons','/Users/jmaltin/newgoliath/ocp4_advanced_deployment')
+course1.render_readme
+
 #puts "Course title: "+course1.title
 #course1.modules.each do |p|
 #  puts "Module title: "+ p.title
@@ -299,4 +366,4 @@ end
 #lab1 = Lab.new('test', '/Users/jmaltin/newgoliath/ocp4_foundations/modules/03_OpenShift_User_Experience/03_01_Demonstrate_OpenShift_Resources_Lab.adoc')
 #puts lab1.topics
 
-github = GitHubOrg.new()
+#github = GitHubOrg.new()

@@ -10,13 +10,14 @@ doc = Asciidoctor.load_file ARGF.filename, safe: :safe, :attributes => 'revealjs
   #puts gblock
 #end
 puts "by section"
-puts doc.find_by( context: :section ) 
+puts doc.find_by( context: :section ) {|s| s.level == 1 }
 
 puts "by grade"
 puts doc.find_by( id: :grade ) 
 
 puts "by block"
 puts doc.find_by
+__END__
 
 puts "by role"
 puts doc.find_by( role: 'grade' ) 

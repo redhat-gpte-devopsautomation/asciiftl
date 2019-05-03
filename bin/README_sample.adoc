@@ -1,0 +1,70 @@
+= Course Title
+== Overview
+* This repo contains the course material for...
+
+- Product Version:
+- Environment Version:
+- Course Developer: <email>
+- Course Contributors: {<email>}
+
+=== Course Modules
+
+* Modules in this course:
+- Course Introduction
+- Sample Module
+- Sample Module
+
+=== Competency Model Skills Covered
+
+* Activities covered in Course pre-requisites:
+- Skills
+
+=== Course Environment Details
+
+* This course utilizes the Shared OpenTLC OpenShift environment:
+- Participants gain access by provisioning request in https://labs.opentlc.com[] and https://rhpds.redhat.com[]
+- Participants will be provided with a `Quota` sufficient to run all the labs in the training
+- All participant Projects will be deleted by CloudForms as the service is retired.
+
+== Modules Review
+
+=== Module 01: Course Introduction
+
+==== Topics Covered
+* Course Goals
+* Course Overview
+* Class Environment and connection details
+- Lab: Provision Your Lab Environment
+
+==== Competency Model Activities Covered In Module
+
+This is an introduction module and does not cover any competency Model Activities.
+
+==== Module Labs
+
+* Lab: Provision Your Lab Environment
+- Lab Scenario: To do the labs in this training, a lab environment must be provisioned, which provides access to an environment with all the components required to perform the labs.
+
+
+=== Module NN: <module name>
+
+==== Topics Covered
+- Overview
+- <slide topics>
+- Lab: <lab toc>
+
+==== Competency Model Skills Covered In Module
+- <skills>
+
+==== Module Labs
+
+* Lab: Name
+* Lab Scenario: <lab scenrio>
+- <skills>
+
+
+
+== Version
+
+* 0.0.0 - May 01, 2019 - Pilot Release
+
