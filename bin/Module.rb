@@ -12,10 +12,12 @@
 #     Labs:
 #       Topics
 
+require 'logger'
 require 'git'
 require 'octokit'
 require 'asciidoctor'
 require 'erb'
+require 'logger'
 
 class GitHubOrg
   def initialize(org='redhat-gpe',repo_base='/tmp/course_repos')
@@ -24,7 +26,7 @@ class GitHubOrg
     @repo_base = repo_base
     @repos     = Hash.new
     @courses   = Array.new(0)
-    #puts "org: #{org}: #{repo_base}"
+    MyLog.log.debug "org: #{org}: #{repo_base}"
     ocp_courses
     load_courses
   end
@@ -32,30 +34,38 @@ class GitHubOrg
   # returns list of courses
   def courses
     courses = @client.org_repos('redhat-gpe', {:type => 'all', :sort => 'pushed'})
-    courses.each { |c| puts c.name }
+    courses.each { |c| MyLog.log.info c.name }
   end
 
   def ocp_courses
     c_repos = @client.org_repos('redhat-gpe', {:type => 'all', :sort => 'pushed'})
+    MyLog.log.debug "ocp_courses"
     c_repos.each do |c|
       if c.name.start_with?('ocp')
         @repos[c.name] = c.html_url
-        puts c.name
-        puts @repos[c.name]
+        MyLog.log.debug "#{c.name} #{@repos[c.name]}"
       end
     end
-    puts @repos
+    MyLog.log.debug @repos
   end
 
   def clone_repo(repo_name)
-    puts "clone repo: #{repo_name})"
-    g = Git.clone(repo_name, :path => @repo_base + repo_name)
-    return @repo_base + '/' + name
+    MyLog.log.debug "clone repo: #{repo_name}"
+    repo_path = @repo_base + '/' + repo_name
+    MyLog.log.debug "clone path: #{repo_path}"
+    if ( g = Git.open( repo_path ) )
+      MyLog.log.debug "Pull"
+      g.pull
+    else
+      MyLog.log.debug "Clone"
+      Git.clone(repo_name, :path => repo_path)
+    end
+    return repo_path
   end
 
   def refresh_repo(repo_name)
     repo_base_name = "#{@repo_base}/#{repo_name}"
-    #puts "refresh #{@repos[repo_name]} basename: #{repo_base_name}"
+    MyLog.log.debug "refresh #{@repos[repo_name]} basename: #{repo_base_name}"
     g = Git.clone(@repos[repo_name], repo_base_name)
     # if g failed, then clone
     return repo_base_name
@@ -63,11 +73,12 @@ class GitHubOrg
 
   def load_courses
     @repos.each_key do |r_name|
-      puts "rname #{r_name}"
+      MyLog.log.debug "rname #{r_name}"
       # refresh the repo
-      r_path = refresh_repo(r_name)
-      puts "repo path: #{r_path}"
+      r_path = clone_repo(r_name)
+      MyLog.log.debug "repo path: #{r_path}"
       # load the course
+      MyLog.log.debug "course new"
       @courses << Course.new(r_name,r_path)
     end
   end
@@ -86,7 +97,7 @@ class ReadMe
 
   def load(readme_asciidoc)
     readme_asciidoc.find_by(context: :section).each do |sect|
-      puts sect.title
+      MyLog.log.debug "sect.title"
       if sect.level == 1
         if sect.title == 'Overview'
           @readme_overview = sect
@@ -208,12 +219,12 @@ class CModule
   end
 
   def load
-    #puts "reads in all slides and labs by path or URL of the module/NN"
+    MyLog.log.debug "reads in all slides and labs by path or URL of the module"
     # just files for now
     # slides
     # use find to get the _Slides and *_Lab.adoc paths of module
     slides_path = @path + "/_Slides.adoc"
-    # puts "slides_path #{slides_path}"
+    MyLog.log.debug "slides_path #{slides_path}"
     if FileTest.readable?(slides_path)
       @slides_asciidoc = Asciidoctor.load_file slides_path, safe: :safe, parse: :false, :attributes => 'revealjs_slideshow'
     else
@@ -243,6 +254,7 @@ class CModule
   end
 
   def parse_titles
+    return unless @slides_asciidoc.find_by(context: :section, id: 'cover')[0]
     title_block = @slides_asciidoc.find_by(context: :section, id: 'cover')[0].blocks
     @course_title = title_block[0].content
     @module_title = title_block[1].content
@@ -258,7 +270,7 @@ class CModule
     @slides_asciidoc.find_by(context: :section).each do |sect|
       @slides << Slide.new(sect.id,sect)
     end
-    #@slides.each{|t| puts t.topic}
+    #@slides.each{|t| MyLog.log.debug "t.topic"}
   end
 
   def parse_labs
@@ -271,9 +283,11 @@ class CModule
   def parse_topics
     # a hash of topics and slide count
     @slides.each do |slide|
+      MyLog.log.debug "Slide ID: #{slide.id}"
+      MyLog.log.debug "Slide Topic: #{slide.topic}"
       @topics[slide.topic] += 1
       @topics_slides[slide.topic] << slide
-      #puts @topics_slides[slide.topic].each { |p| puts "all slides for topic #{p.topic}" }
+      @topics_slides[slide.topic].each { |p| MyLog.log.debug "all slides for topic #{p.topic} #{p.id}" }
     end
 
   end
@@ -293,8 +307,10 @@ class CModule
 end
 
 class Slide
-  def initialize(name,sect)
-    @name = name
+  attr_reader :topic, :content, :id
+
+  def initialize(id,sect)
+    @id = id
     @sect = sect
   end
 
@@ -331,39 +347,36 @@ class Lab
 #   end
 
   def prep_blocks
-    puts "prep_block"
+    MyLog.log.debug "prep_block"
   end
 
   def grade_blocks
-    puts "grade_block"
+    MyLog.log.debug "grade_block"
   end
 
   def solve_blocks
-    puts "solve_block"
+    MyLog.log.debug "solve_block"
   end
 end
 
-course1 = Course.new('ocp4_foundaitons','/Users/jmaltin/newgoliath/ocp4_advanced_deployment')
-course1.render_readme
+class MyLog
+  def self.log
+    if @logger.nil?
+      @logger = Logger.new STDOUT
+      #@logger = Logger.new "log.log"
+      @logger.level = Logger::DEBUG
+      @logger.datetime_format = '%Y-%m-%d %H:%M:%S '
+    end
+    @logger
+  end
+end
 
-#puts "Course title: "+course1.title
-#course1.modules.each do |p|
-#  puts "Module title: "+ p.title
-#  puts "Module Slides Count: #{p.slides.count}"
-#  puts "Module Topics: #{p.slides_by_topic.count}"
-#  puts "Module Slides Topics: #{p.topics}"
-#  puts
-#end
+#course1 = Course.new('ocp4_foundaitons','/Users/jmaltin/newgoliath/ocp4_advanced_deployment')
+#course1.render_readme
 
 ##module1 = Module.new('intro', '/Users/jmaltin/newgoliath/ocp4_foundations/modules/03_OpenShift_User_Experience/')
-#puts module1.topics
-#puts "Module Labs: #{module1.labs.count}"
-#puts "Module Labs Topics: "
-#module1.labs.each { |l| puts l.topics }
-#puts module1.course_title
-#puts module1.title
-#
+
 #lab1 = Lab.new('test', '/Users/jmaltin/newgoliath/ocp4_foundations/modules/03_OpenShift_User_Experience/03_01_Demonstrate_OpenShift_Resources_Lab.adoc')
 #puts lab1.topics
 
-#github = GitHubOrg.new()
+github = GitHubOrg.new()

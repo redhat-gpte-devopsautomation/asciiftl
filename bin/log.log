@@ -1,0 +1,24 @@
+# Logfile created on 2019-05-06 15:09:19 -0400 by logger.rb/66358
+I, [2019-05-06 15:09:19 #8786]  INFO -- : hi judd
+D, [2019-05-06 15:11:46 #9475] DEBUG -- : org: redhat-gpe: /tmp/course_repos
+D, [2019-05-06 15:11:46 #9475] DEBUG -- : ocp_courses
+D, [2019-05-06 15:11:46 #9475] DEBUG -- : {}
+D, [2019-05-07 16:11:24 #15265] DEBUG -- : org: redhat-gpe: /tmp/course_repos
+D, [2019-05-07 16:11:25 #15265] DEBUG -- : ocp_courses
+D, [2019-05-07 16:11:25 #15265] DEBUG -- : ocp4_installation https://github.com/redhat-gpe/ocp4_installation
+D, [2019-05-07 16:11:25 #15265] DEBUG -- : ocp4_advanced_deployment https://github.com/redhat-gpe/ocp4_advanced_deployment
+D, [2019-05-07 16:11:25 #15265] DEBUG -- : ocp4_configuration https://github.com/redhat-gpe/ocp4_configuration
+D, [2019-05-07 16:11:25 #15265] DEBUG -- : ocp4_resources https://github.com/redhat-gpe/ocp4_resources
+D, [2019-05-07 16:11:25 #15265] DEBUG -- : ocp_operations https://github.com/redhat-gpe/ocp_operations
+D, [2019-05-07 16:11:25 #15265] DEBUG -- : ocp4_exploration https://github.com/redhat-gpe/ocp4_exploration
+D, [2019-05-07 16:11:25 #15265] DEBUG -- : ocp_service_mesh_foundations https://github.com/redhat-gpe/ocp_service_mesh_foundations
+D, [2019-05-07 16:11:25 #15265] DEBUG -- : ocp4_foundations https://github.com/redhat-gpe/ocp4_foundations
+D, [2019-05-07 16:11:25 #15265] DEBUG -- : ocp_sa_workshop https://github.com/redhat-gpe/ocp_sa_workshop
+D, [2019-05-07 16:11:25 #15265] DEBUG -- : ocp_advanced_development https://github.com/redhat-gpe/ocp_advanced_development
+D, [2019-05-07 16:11:25 #15265] DEBUG -- : ocp_implementation https://github.com/redhat-gpe/ocp_implementation
+D, [2019-05-07 16:11:25 #15265] DEBUG -- : {"ocp4_installation"=>"https://github.com/redhat-gpe/ocp4_installation", "ocp4_advanced_deployment"=>"https://github.com/redhat-gpe/ocp4_advanced_deployment", "ocp4_configuration"=>"https://github.com/redhat-gpe/ocp4_configuration", "ocp4_resources"=>"https://github.com/redhat-gpe/ocp4_resources", "ocp_operations"=>"https://github.com/redhat-gpe/ocp_operations", "ocp4_exploration"=>"https://github.com/redhat-gpe/ocp4_exploration", "ocp_service_mesh_foundations"=>"https://github.com/redhat-gpe/ocp_service_mesh_foundations", "ocp4_foundations"=>"https://github.com/redhat-gpe/ocp4_foundations", "ocp_sa_workshop"=>"https://github.com/redhat-gpe/ocp_sa_workshop", "ocp_advanced_development"=>"https://github.com/redhat-gpe/ocp_advanced_development", "ocp_implementation"=>"https://github.com/redhat-gpe/ocp_implementation"}
+D, [2019-05-07 16:11:25 #15265] DEBUG -- : rname ocp4_installation
+D, [2019-05-07 16:11:25 #15265] DEBUG -- : refresh https://github.com/redhat-gpe/ocp4_installation basename: /tmp/course_repos/ocp4_installation
+D, [2019-05-07 16:11:26 #15265] DEBUG -- : repo path: /tmp/course_repos/ocp4_installation
+D, [2019-05-07 16:11:26 #15265] DEBUG -- : reads in all slides and labs by path or URL of the module
+D, [2019-05-07 16:11:26 #15265] DEBUG -- : slides_path /tmp/course_repos/ocp4_installation/modules//01_Course_Intro//_Slides.adoc
